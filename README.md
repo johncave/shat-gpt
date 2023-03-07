@@ -4,7 +4,7 @@ Elephant?
 ### Start the server
 `go run *.go`
  
-http://localhost:8080/room/elephant
+http://localhost:8080/
 
 ### Run from docker 
 - Pull the image from this repo  
@@ -14,5 +14,5 @@ http://localhost:8080/room/elephant
 `docker run -p 8080:8080 registry.gitlab.com/mnitv/elephant`
 
 - In your browser
-[localhost:8080/room/elephant](http://localhost:8080/room/elephant)
+[localhost:8080](http://localhost:8080/)
 
