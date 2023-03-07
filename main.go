@@ -9,6 +9,7 @@ func main() {
 
 	router := gin.New()
 	router.LoadHTMLFiles("index.html")
+	router.StaticFile("/favicon.ico", "favicon.ico")
 
 	router.GET("/room/:roomId", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
