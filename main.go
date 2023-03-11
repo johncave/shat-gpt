@@ -56,6 +56,8 @@ func main() {
 	// API Routes
 	router.POST("/api/register", RegisterUser)
 
+	router.POST("/api/chatgpt", callChatGptApi)
+
 	listenAddress, present := os.LookupEnv("PORT")
 	if !present {
 		listenAddress = "0.0.0.0:8080"
