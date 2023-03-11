@@ -42,7 +42,11 @@ function App() {
     if (window["WebSocket"]) {
         // const params = window.location.href.split("/");
         // const roomId = params[params.length - 1];
-        conn = new WebSocket("ws://" + document.location.host + "/ws/elephant");
+        websock_proto = "wss";
+        if (location.protocol !== "https:") {
+            websock_proto = "ws";
+          }
+        conn = new WebSocket(websock_proto +"://" + document.location.host + "/ws/shatgpt");
         conn.onclose = function (evt) {
             let item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
