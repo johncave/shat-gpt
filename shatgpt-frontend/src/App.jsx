@@ -1,9 +1,21 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
+import Leaderboard from './components/leaderboard'
 
 function App() {
   const [count, setCount] = useState(0)
+
+  function promptToGTP(){
+    let inputToGTP = prompt("What would you ask ChatGTP?")
+    let charCount = inputToGTP.length
+    if (count > charCount){
+        return;
+    }
+    else{
+        alert("You do not have enough coins!")
+    }
+  }
 
   window.onload = function () {
     let conn;
@@ -45,7 +57,7 @@ function App() {
         var websock_proto = "wss";
         if (location.protocol !== "https:") {
             websock_proto = "ws";
-          }
+        }
         conn = new WebSocket(websock_proto +"://" + document.location.host + "/ws/shatgpt");
         conn.onclose = function (evt) {
             let item = document.createElement("div");
@@ -75,14 +87,20 @@ function App() {
 
   return (
     <>
-      <div id="log"></div>
-      <form id="form">
-      {/* <input type="text" id="msg" size="64" autofocus/>
+        <div id="log"></div>
+        <form id="form">
+        {/* <input type="text" id="msg" size="64" autofocus/>
       <input type="submit" value="🐘" size="50"/> */}
-          <button type="submit" class="button-36" role="button">💩</button>
-      </form>
+        <button type="submit" className="button-36" role="button">
+        💩
+        </button>
+        <button type="submit" className="button-36" role="button" onClick={promptToGTP}>
+            Ask ChatGTP
+        </button>
+        </form>
+        <Leaderboard />
     </>
-  )
+  );
 }
 
 export default App
