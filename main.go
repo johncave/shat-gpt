@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"net/http/httputil"
+	"net/url"
 	"os"
 
 	"github.com/gin-gonic/contrib/static"
@@ -62,4 +64,15 @@ func main() {
 	}
 
 	router.Run(listenAddress)
+}
+
+func ReverseProxy(target string) gin.HandlerFunc {
+	url, err := url.Parse(target)
+	if err != nil {
+		log.Println(err)
+	}
+	proxy := httputil.NewSingleHostReverseProxy(url)
+	return func(c *gin.Context) {
+		proxy.ServeHTTP(c.Writer, c.Request)
+	}
 }
