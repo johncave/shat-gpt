@@ -32,7 +32,20 @@ func RegisterUser(c *gin.Context) {
 	fmt.Println("Register user")
 	// Generate the user's token
 	token := GenerateToken(14)
-	name := GenerateUsername()
+
+	var incomingRequest RegisterRequest
+	// Call BindJSON to bind the received JSON to
+	// newAlbum.
+	if err := c.BindJSON(&incomingRequest); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, ErrorResponse{Code: http.StatusBadRequest, Message: "Invalid register request"})
+		return
+	}
+	var name string
+	if incomingRequest.DesiredName == "" {
+		name = GenerateUsername()
+	} else {
+		name = incomingRequest.DesiredName
+	}
 
 	// Store the user in Redis
 	saveMe, err := json.Marshal(UserInRedis{UserName: name})

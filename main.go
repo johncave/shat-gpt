@@ -52,7 +52,7 @@ func main() {
 	})
 
 	// API Routes
-	router.GET("/api/register", RegisterUser)
+	router.POST("/api/register", RegisterUser)
 
 	listenAddress, present := os.LookupEnv("PORT")
 	if !present {
