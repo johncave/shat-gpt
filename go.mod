@@ -1,4 +1,4 @@
-module gitlab.com/mnitv/elephant
+module github.com/johncave/shatgpt
 
 go 1.20
 
