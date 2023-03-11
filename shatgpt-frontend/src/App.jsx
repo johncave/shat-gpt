@@ -42,7 +42,7 @@ function App() {
     if (window["WebSocket"]) {
         // const params = window.location.href.split("/");
         // const roomId = params[params.length - 1];
-        websock_proto = "wss";
+        var websock_proto = "wss";
         if (location.protocol !== "https:") {
             websock_proto = "ws";
           }
