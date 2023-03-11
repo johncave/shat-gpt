@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -24,7 +23,7 @@ type RegisterResponse struct {
 	UserName string `json:"username"`
 }
 
-type UserInRedis struct {
+type User struct {
 	UserName string `json:"username"`
 }
 
@@ -48,14 +47,12 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	// Store the user in Redis
-	saveMe, err := json.Marshal(UserInRedis{UserName: name})
+	saveMe, err := json.Marshal(User{UserName: name})
 	if err != nil {
 		fmt.Println(err)
 	}
-	error := RedisConn.Set(context.Background(), "t-"+token, saveMe, 0).Err()
-	if error != nil {
-		fmt.Println(err)
-	}
+
+	err = redisSet("t-"+token, saveMe)
 
 	// Send response
 	c.IndentedJSON(http.StatusCreated, RegisterResponse{Token: token, UserName: name})
@@ -79,4 +76,15 @@ func GenerateUsername() string {
 	nameGenerator := namegenerator.NewNameGenerator(seed)
 
 	return nameGenerator.Generate()
+}
+
+func LookupToken(token string) (User, error) {
+	val, err := redisGet("t-" + token)
+	if err != nil {
+		return User{}, err
+	}
+	var u User
+	json.Unmarshal([]byte(val), &u)
+	return u, nil
+
 }

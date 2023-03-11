@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -37,6 +38,18 @@ type connection struct {
 	send chan []byte
 }
 
+// IncomingPress is the type used to read the JSON coming down the websocket from the client
+type IncomingPress struct {
+	EventName string `json:"event_name"`
+	UserToken string `json:"token"`
+}
+
+type OutgoingUpdate struct {
+	EventName string    `json:"event_name"`
+	PoolSize  int64     `json:"pool_size"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
 // readPump pumps messages from the websocket connection to the hub.
 func (s subscription) readPump() {
 	c := s.conn
@@ -48,15 +61,23 @@ func (s subscription) readPump() {
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
 	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, msg, err := c.ws.ReadMessage()
+		var incomingJson IncomingPress
+		err := c.ws.ReadJSON(incomingJson)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
 			}
 			break
 		}
-		m := message{msg, s.room}
-		h.broadcast <- m
+		// Check what type of message we are receiving
+		switch incomingJson.EventName {
+		case "press":
+			log.Println("Processing incoming press")
+			processPress(incomingJson, s.room)
+		}
+
+		// m := message{msg, s.room}
+		// h.broadcast <- m
 	}
 }
 
@@ -105,4 +126,36 @@ func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
 	h.register <- s
 	go s.writePump()
 	go s.readPump()
+}
+
+func processPress(in IncomingPress, room string) {
+	// Get the user from the token
+	_, err := LookupToken(in.UserToken)
+	if err != nil {
+		log.Println("User token was invalid - ignoring websocket message", in)
+		return
+	}
+
+	// User is okay now
+	_, err = redisIncrement("global-total")
+	if err != nil {
+		log.Println("Error incrementing the global total of clicks - skipping", err)
+		return
+	}
+	poolCount, err := redisIncrement("pool-total")
+	if err != nil {
+		log.Println("Error updating the pool size - skipping", err)
+		return
+	}
+
+	out := OutgoingUpdate{
+		EventName: "pool_size",
+		PoolSize:  poolCount,
+		Timestamp: time.Now(),
+	}
+
+	outjson, _ := json.MarshalIndent(out, "", "  ")
+
+	m := message{outjson, room}
+	h.broadcast <- m
 }
