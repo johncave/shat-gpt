@@ -16,6 +16,12 @@ var RedisConn *redis.Client
 func main() {
 	go h.run()
 
+	path, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(path)
+
 	redisAddress, present := os.LookupEnv("redis")
 	if !present {
 		redisAddress = "localhost:6379"
@@ -32,12 +38,12 @@ func main() {
 	}
 
 	router := gin.New()
-	router.LoadHTMLFiles("index.html")
+	router.LoadHTMLFiles("./shatgpt-frontend/dist")
 	router.StaticFile("/favicon.ico", "favicon.ico")
 	router.Use(static.Serve("/", static.LocalFile("./shatgpt-frontend/dist", true)))
 
 	router.GET("/", func(c *gin.Context) {
-		c.HTML(200, "index.html", nil)
+		c.HTML(200, "./shatgpt-frontend/dist", nil)
 	})
 
 	router.GET("/ws/:roomId", func(c *gin.Context) {
@@ -50,7 +56,7 @@ func main() {
 
 	listenAddress, present := os.LookupEnv("PORT")
 	if !present {
-		listenAddress = "localhost:8080"
+		listenAddress = "0.0.0.0:8080"
 	} else {
 		listenAddress = "0.0.0.0:" + os.Getenv("PORT")
 	}
