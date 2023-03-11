@@ -22,7 +22,7 @@ func main() {
 	}
 	log.Println(path)
 
-	redisAddress, present := os.LookupEnv("redis")
+	redisAddress, present := os.LookupEnv("REDIS_URL")
 	if !present {
 		redisAddress = "localhost:6379"
 	}
