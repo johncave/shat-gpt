@@ -12,15 +12,25 @@ function App() {
     function promptToGTP() {
         let inputToGTP = prompt("What would you ask ChatGTP?")
         let charCount = inputToGTP.length
-        if (count > charCount) {
-            return;
-        }
-        else {
-            alert("You do not have enough coins!")
-        }
+        axios.post('/api/chatgpt',{
+          prompt: inputToGTP
+        })
     }
 
     window.onload = function () {
+      if (localStorage.getItem("user-token") === null) {
+        axios.post('/api/register', {
+            desired_name: ''
+        })
+            .then(function (response) {
+                console.log(response.data);
+                localStorage.setItem("user-token", response.data.token)
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
       let conn;
       let msg = document.getElementById("msg");
       let log = document.getElementById("log");
