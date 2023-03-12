@@ -47,8 +47,8 @@ func main() {
 	}
 
 	GlobalLeaderBoard = leaderboard.NewLeaderboard(leaderboard.RedisSettings{
-		Host:     redisAddress,
-		Password: "",
+		Host:     redOpts.Addr,
+		Password: redOpts.Password,
 	}, "highscores", 50)
 
 	router := gin.New()

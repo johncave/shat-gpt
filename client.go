@@ -152,7 +152,8 @@ func processPress(in IncomingPress, room string) {
 	// Add the press to the leaderboard
 	lbUser, err := GlobalLeaderBoard.GetMember(u.UserName)
 	logError("updating leaderboard for user", err)
-	GlobalLeaderBoard.RankMember(u.UserName, lbUser.Score+1)
+	_, err = GlobalLeaderBoard.RankMember(u.UserName, lbUser.Score+1)
+	logError("incrementing leaderboard", err)
 
 	out := OutgoingUpdate{
 		EventName: "pool_size",
