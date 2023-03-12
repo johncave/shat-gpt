@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http/httputil"
@@ -47,7 +48,7 @@ func main() {
 	GlobalLeaderBoard = leaderboard.NewLeaderboard(leaderboard.RedisSettings{
 		Host:     redisAddress,
 		Password: "",
-	}, "highscores", 10)
+	}, "highscores", 50)
 
 	router := gin.New()
 	router.LoadHTMLFiles("./shatgpt-frontend/dist")
@@ -76,15 +77,25 @@ func main() {
 	}
 
 	// Print out the scoreboard periodically
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
 	go func() {
 		for range ticker.C {
 			lb := GlobalLeaderBoard.GetLeaders(1)
 			log.Print()
+			var lbUsers []WSLeaderboardUser
 			if lb[0].Score != 0 {
 				for _, s := range lb {
-					fmt.Printf("%02d  %05d %s\n", s.Rank, s.Score, s.Name)
+					if s.Score > 0 {
+						lbUsers = append(lbUsers, WSLeaderboardUser{UserName: s.Name, Score: s.Score, Rank: s.Rank})
+						fmt.Printf("%02d  %05d %s\n", s.Rank, s.Score, s.Name)
+					}
+
 				}
+				wsout := WSLeaderboard{EventName: "leaderboard", Timestamp: time.Now(), Leaderboard: lbUsers}
+				outjson, _ := json.MarshalIndent(wsout, "", "  ")
+
+				m := message{outjson, "shatgpt"}
+				h.broadcast <- m
 			} else {
 				fmt.Println("No users")
 			}
