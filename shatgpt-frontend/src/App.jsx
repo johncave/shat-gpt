@@ -61,11 +61,13 @@ function App() {
               return false;
           }
   
-          token = localStorage.getItem("user-token")
-          conn.send({
+          var token = localStorage.getItem("user-token")
+          var ws_send = {
             event_name: "click",
             token: token
-          });
+          }
+          conn.send(JSON.stringify(ws_send));
+          console.log("Sending to websocket: ", ws_send)
   
           return false;
       };

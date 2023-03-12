@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -59,12 +60,18 @@ func (s subscription) readPump() {
 	c.ws.SetReadLimit(maxMessageSize)
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
 	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	var count int
 	for {
 		var incomingJson IncomingPress
-		err := c.ws.ReadJSON(&incomingJson)
+		//err := c.ws.ReadJSON(&incomingJson)
+		_, data, err := c.ws.ReadMessage()
+		count++
+		fmt.Println(count, string(data))
+		json.Unmarshal(data, &incomingJson)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
+				break
 			}
 			log.Println("Not a JSON message - ignoring", err)
 			//break
