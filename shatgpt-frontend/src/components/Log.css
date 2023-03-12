@@ -1,0 +1,15 @@
+.log {
+
+}
+
+.poop-button__container {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+}
+
+.poop-button {
+  font-size: 16em;
+  text-align: center;
+  background: transparent;
+}
