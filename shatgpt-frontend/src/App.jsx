@@ -9,9 +9,9 @@ import axios from 'axios'
 function App() {
     const [count, setCount] = useState(0)
 
-    function promptToGTP() {
-        let inputToGTP = prompt("What would you ask ChatGTP?")
-        let charCount = inputToGTP.length
+    function promptToGPT() {
+        let inputToGPT = prompt("What would you ask ShatGPT?")
+        let charCount = inputToGPT.length
         axios.post('/api/chatgpt',{
           prompt: inputToGTP
         })
@@ -107,8 +107,8 @@ function App() {
               <button type="submit" className="button-36" role="button">
                   💩
               </button>
-              <button type="submit" className="button-36" role="button" onClick={promptToGTP}>
-                  Ask ChatGTP
+              <button type="submit" className="button-36" role="button" onClick={promptToGPT}>
+                  Ask ShatGPT
               </button>
           </form>
           {/* <Leaderboard /> */}
