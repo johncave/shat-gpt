@@ -130,7 +130,7 @@ func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
 
 func processPress(in IncomingPress, room string) {
 	// Get the user from the token
-	_, err := LookupToken(in.UserToken)
+	u, err := LookupToken(in.UserToken)
 	if err != nil {
 		log.Println("User token was invalid - ignoring websocket message", in)
 		return
@@ -147,6 +147,11 @@ func processPress(in IncomingPress, room string) {
 		log.Println("Error updating the pool size - skipping", err)
 		return
 	}
+
+	// Add the press to the leaderboard
+	lbUser, err := GlobalLeaderBoard.GetMember(u.UserName)
+	logError("updating leaderboard for user", err)
+	GlobalLeaderBoard.RankMember(u.UserName, lbUser.Score+1)
 
 	out := OutgoingUpdate{
 		EventName: "pool_size",

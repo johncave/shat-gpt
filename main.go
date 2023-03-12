@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"time"
 
+	"github.com/dayvson/go-leaderboard"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -14,6 +17,7 @@ import (
 )
 
 var RedisConn *redis.Client
+var GlobalLeaderBoard leaderboard.Leaderboard
 
 func main() {
 	go h.run()
@@ -37,7 +41,13 @@ func main() {
 	ping, err := RedisConn.Ping(context.TODO()).Result()
 	if err != nil {
 		log.Println("error pinging redis", err, ping)
+		return
 	}
+
+	GlobalLeaderBoard = leaderboard.NewLeaderboard(leaderboard.RedisSettings{
+		Host:     redisAddress,
+		Password: "",
+	}, "highscores", 10)
 
 	router := gin.New()
 	router.LoadHTMLFiles("./shatgpt-frontend/dist")
@@ -64,6 +74,23 @@ func main() {
 	} else {
 		listenAddress = "0.0.0.0:" + os.Getenv("PORT")
 	}
+
+	// Print out the scoreboard periodically
+	ticker := time.NewTicker(2 * time.Second)
+	go func() {
+		for range ticker.C {
+			lb := GlobalLeaderBoard.GetLeaders(1)
+			log.Print()
+			if lb[0].Score != 0 {
+				for _, s := range lb {
+					fmt.Printf("%02d  %05d %s\n", s.Rank, s.Score, s.Name)
+				}
+			} else {
+				fmt.Println("No users")
+			}
+
+		}
+	}()
 
 	router.Run(listenAddress)
 }
