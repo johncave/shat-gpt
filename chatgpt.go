@@ -16,10 +16,41 @@ type AskRequest struct {
 	Prompt string `json:"prompt"`
 }
 
+type Message struct {
+	Role string `json:"role"`
+	Content string `json:"content"`
+}
+
+type ChatGPTOptions struct {
+	Messages []Message `json:"messages"`
+	Model string `json:"model"`
+	MaxTokens int `json:"max_tokens"`
+	Temperature float32 `json:"temperature"`
+}
+
+type ChatGPTUsage struct {
+	Prompt int `json:"prompt_tokens"`
+	Completion int `json:"completion_tokens"`
+	Total int `json:"total_tokens"`
+}
+
+type ChatGPTChoices struct {
+	Message Message `json:"message"`
+	FinishReason string `json:"finish_reason"`
+	Index int `json:"index"`
+}
+
+type ChatGPTOutput struct {
+	ID string `json:"id"`
+	Object string `json:"object"`
+	Created int `json:"created"`
+	Model string `json:"model"`
+	Choices []ChatGPTChoices `json:"choices"`
+	Usage ChatGPTUsage `json:"usage"`
+}
+
 func callChatGptApi(c *gin.Context) {
 	var incomingRequest AskRequest
-
-	fmt.Print(incomingRequest.Prompt)
 
 	if err := c.BindJSON(&incomingRequest); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, ErrorResponse{Code: http.StatusBadRequest, Message: "Invalid chatgpt request"})
@@ -33,24 +64,44 @@ func callChatGptApi(c *gin.Context) {
 		prompt = incomingRequest.Prompt
 	}
 
-	askChatGPT(prompt)
-	c.IndentedJSON(http.StatusCreated, "")
+	response := askChatGPT(prompt)
+	fmt.Println(response)
+
+	json_data, err := json.Marshal(response)
+
+    if err != nil {
+        log.Fatal(err)
+    }
+	
+	m := message{json_data, "shatgpt"}
+	h.broadcast <- m
+
+	c.IndentedJSON(http.StatusCreated, response)
 }
 
 
+func askChatGPT(prompt string) string {
+	openaiCompletionsURL := "https://api.openai.com/v1/chat/completions"
 
-func askChatGPT(prompt string) {
-	openaiCompletionsURL := "https://api.openai.com/v1/completions"
+	systemContext := "Answer the following prompt with as much uwu as possible and with poop emoji and poop innuendo"
 
-	contextPrompt := fmt.Sprintf("Answer the following prompt with as much uwu as possible and with poop emoji and poop innuendo: %s", prompt)
-
-	values := map[string]string{
-		"model": "gpt-3.5-turbo", 
-		"prompt": contextPrompt,
-		"max_tokens": "1000",
-		"temperature": "0.5",
+	options := ChatGPTOptions{
+		Model: "gpt-3.5-turbo",
+		Temperature: 0.5,
+		MaxTokens: 1000,
+		Messages: []Message{
+			Message{
+				Role: "system",
+				Content: systemContext,
+			},
+			Message{
+				Role: "user",
+				Content: prompt,
+			},
+		},
 	}
-    json_data, err := json.Marshal(values)
+
+    json_data, err := json.Marshal(options)
 
     if err != nil {
         log.Fatal(err)
@@ -60,8 +111,11 @@ func askChatGPT(prompt string) {
 	if err != nil {
         log.Fatal(err)
     }
+
+	key := os.Getenv("CHATGPT_KEY")
+
 	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s",os.Getenv("CHATGPT_KEY")))
+	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s",key))
 	client := &http.Client{}
 	resp, err := client.Do(r)
 	if err != nil {
@@ -70,9 +124,11 @@ func askChatGPT(prompt string) {
 
 	defer resp.Body.Close()
 
-    var res map[string]interface{}
+    var res ChatGPTOutput
 
     json.NewDecoder(resp.Body).Decode(&res)
 
-    fmt.Println(res["json"])
+	messageResponse := res.Choices[0].Message.Content
+
+	return messageResponse
 }
