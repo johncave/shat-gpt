@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -62,18 +61,20 @@ func (s subscription) readPump() {
 	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		var incomingJson IncomingPress
-		err := c.ws.ReadJSON(incomingJson)
+		err := c.ws.ReadJSON(&incomingJson)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("error: %v", err)
 			}
-			break
-		}
-		// Check what type of message we are receiving
-		switch incomingJson.EventName {
-		case "press":
-			log.Println("Processing incoming press")
-			processPress(incomingJson, s.room)
+			log.Println("Not a JSON message - ignoring", err)
+			//break
+		} else {
+			// Check what type of message we are receiving
+			switch incomingJson.EventName {
+			case "press":
+				log.Println("Processing incoming press")
+				processPress(incomingJson, s.room)
+			}
 		}
 
 		// m := message{msg, s.room}
@@ -115,7 +116,7 @@ func (s *subscription) writePump() {
 
 // serveWs handles websocket requests from the peer.
 func serveWs(w http.ResponseWriter, r *http.Request, roomId string) {
-	fmt.Print(roomId)
+	log.Println("User connected to room", roomId)
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err.Error())

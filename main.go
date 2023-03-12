@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Print out the scoreboard periodically
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	go func() {
 		for range ticker.C {
 			lb := GlobalLeaderBoard.GetLeaders(1)

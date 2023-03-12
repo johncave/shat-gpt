@@ -3,10 +3,10 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 export const WebSocketDemo = () => {
   //Public API that will echo messages sent to it back to the client
-  const [socketUrl, setSocketUrl] = useState('wss://echo.websocket.events');
+  const [socketUrl, setSocketUrl] = useState('ws://localhost:8080/ws/shatgpt');
   const [messageHistory, setMessageHistory] = useState([]);
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
+  const { sendJsonMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
   useEffect(() => {
     if (lastMessage !== null) {
@@ -19,7 +19,7 @@ export const WebSocketDemo = () => {
     []
   );
 
-  const handleClickSendMessage = useCallback(() => sendMessage('Hello'), []);
+  const handleClickSendMessage = useCallback(() => sendJsonMessage({event_name: "press", token: "Qv7u1W4pwC4WI9"}), []);
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',
