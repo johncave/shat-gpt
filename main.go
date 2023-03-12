@@ -31,14 +31,15 @@ func main() {
 
 	redisAddress, present := os.LookupEnv("REDIS_URL")
 	if !present {
-		redisAddress = "localhost:6379"
+		redisAddress = "redis://localhost:6379"
 	}
 
-	RedisConn = redis.NewClient(&redis.Options{
-		Addr:     redisAddress,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	redOpts, err := redis.ParseURL(redisAddress)
+	if err != nil {
+		log.Println("Error parsing Redis URL")
+		return
+	}
+	RedisConn = redis.NewClient(redOpts)
 	ping, err := RedisConn.Ping(context.TODO()).Result()
 	if err != nil {
 		log.Println("error pinging redis", err, ping)
